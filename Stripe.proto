@@ -1,0 +1,186 @@
+syntax = "proto3";
+package stripe;
+
+option go_package = "/proto";
+
+
+service AuthLoadBalancer{
+    rpc RegisterAuthServer(ServerInfo) returns (Response);
+    rpc GetAuthServer(Empty) returns (ServerInfo);
+    rpc UpdateAuthServerLoad(AuthServerLoad) returns (Response);
+}
+
+service BankLoadBalancer{
+    rpc GetAllBankServers(Empty) returns (AllServersResponse);
+    rpc RegisterBankServer(ServerInfo) returns (Response);
+    rpc GetBankServer(Empty) returns (ServerInfo);
+    rpc UpdateBankServerLoad(BankServerLoad) returns (Response);
+}
+
+service Authentication{
+    rpc Register(ClientDetails) returns (Response);
+    rpc Login(Credentials) returns (AuthToken);
+}
+
+service PaymentGateway{
+    rpc InitiateTransaction(TransactionRequest) returns (TransactionResponse);
+    rpc ConfirmTransaction(TransactionConfirmation) returns (Response);
+    rpc GetTransactionStatus(TransactionID) returns (TransactionStatus);
+    rpc ProcessQueuedPayments(OfflineRequest) returns (Response);
+}
+
+service BankServer{
+    rpc DeductMoney(DeductRequest) returns (DeductResponse);
+    rpc HasEnoughMoney(MoneyRequest) returns (MoneyResponse);
+    rpc RegisterUser(ClientDetails) returns (Response);
+    rpc DepositMoney(DepositRequest) returns (DepositResponse);
+    rpc AbortTransaction(TransactionID) returns (Response); 
+}
+
+service TwoPhaseCommit{
+    rpc ReadyToCommitTransaction(TransactionDetails) returns (Vote);
+    rpc CommitTransaction(TransactionDetails) returns (Response);
+    rpc AbortTransaction(TransactionID) returns (Response);
+}
+
+service LoggingService{
+    rpc LogTransaction(LogEntry) returns (Response);
+}
+
+service OfflineQueueService {
+  rpc ProcessQueuedPayments(OfflineRequest) returns (Response);
+}
+
+
+message ClientDetails{
+    string username=1;
+    string password=2;
+    string email=3;
+    string accountNumber=4; //auto-generate by auth server
+    double initialBalance=5; 
+}
+
+message Credentials{
+    string username=1;
+    string password=2;
+}
+
+message Response{
+    string status=1;
+}
+
+message AuthToken{
+    string token=1;
+}
+
+message TransactionRequest{
+    string transactionId=1;
+    string senderId=2;
+    string recieverId=3;
+    double amount=4;
+    string currency=5;
+}
+
+message TransactionResponse{
+    string transactionId=1;
+    string status=2;
+}
+
+message TransactionConfirmation{
+    string transactionId=1;
+    bool success=2;
+}
+
+message TransactionID{
+    string transactionId=1;
+}
+
+message TransactionStatus{
+    string transactionId=1;
+    string status=2;
+}
+
+message OfflineRequest{
+    repeated TransactionRequest transactions=1;
+}
+
+
+message MoneyRequest{
+    string accountNumber=1;
+    double amount=2;
+}
+
+message MoneyResponse{
+    bool approved=1;
+    double balance=2;
+}
+
+message DeductResponse{
+    bool success=1;
+}
+
+message DeductRequest{
+    string accountNumber=1;
+    double amount=2;
+}
+
+message Vote{
+    bool finalDecision = 1;
+}
+
+message LogEntry{
+    string transactionId=1;
+    string clientId=2;
+    double amount=3;
+    string status=4;
+    string timestamp=5;
+}
+
+
+message DepositRequest {
+    string accountNumber = 1;
+    double amount = 2;
+}
+
+message DepositResponse {
+    bool success = 1;
+    double newBalance = 2;
+}
+
+message ServerInfo{
+    string address=1;
+}
+
+message AuthServerLoad {
+    string address = 1;
+    double cpuUsage = 2;
+}
+
+message BankServerLoad {
+    string address = 1;
+    double cpuUsage = 2;
+}
+
+message AllServersResponse {
+    repeated ServerInfo servers = 1;
+}
+
+message TransactionDetails{
+    string transactionId = 1;
+    string senderId = 2;
+    string receiverId = 3;
+    double amount = 4;
+}
+
+message Empty{}
+
+
+
+
+
+
+
+
+
+
+
